@@ -31,7 +31,7 @@ Create a `.env` file in the root directory and provide the following variables:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/task-manager
 
-BETTER_AUTH_SECRET=your_ultra_secure_secret
+BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=http://localhost:3000
 ```
 
