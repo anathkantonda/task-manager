@@ -19,8 +19,13 @@ function AuthLayout() {
     if (isPending) return <p className="text-7xl">Loading...</p>
 
     const handleSignOut = async () => {
-        await signOut();
-        navigate({ to: '/' });
+        await signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    navigate({ to: '/' });
+                },
+            },
+        });
     };
 
     return (
