@@ -15,25 +15,25 @@ const CreateTaskSchema = z.object({
 });
 
 const UpdateStatusSchema = z.object({
-    id: z.string(), 
+    id: z.string(),
     status: z.enum(['todo', 'in_progress', 'done']),
 });
 
 const authMiddleware = createMiddleware()
-  .server(async ({ next }) => {
-    const req = getRequest();
-    const session = await auth.api.getSession({ headers: req.headers });
+    .server(async ({ next }) => {
+        const req = getRequest();
+        const session = await auth.api.getSession({ headers: req.headers });
 
-    if (!session) {
-      throw new Error("Unauthorized");
-    }
+        if (!session) {
+            throw new Error("Unauthorized");
+        }
 
-    return next({
-      context: {
-        user: session.user,
-      },
+        return next({
+            context: {
+                user: session.user,
+            },
+        });
     });
-  });
 
 const getTasks = createServerFn({ method: 'GET' })
     .middleware([authMiddleware])
@@ -55,7 +55,7 @@ const createTask = createServerFn({ method: 'POST' })
             userId: context.user.id,
             status: 'todo',
         }).returning();
-        
+
         return newTask;
     });
 
@@ -66,7 +66,7 @@ const updateTaskStatus = createServerFn({ method: 'POST' })
         await db.update(tasksTable)
             .set({ status: data.status })
             .where(eq(tasksTable.id, data.id));
-            
+
         return { success: true };
     });
 
@@ -86,11 +86,12 @@ export const Route = createFileRoute('/_authenticated/tasks')({
 function TasksPage() {
     const initialTasks = Route.useLoaderData();
     const { data: session } = useSession();
-    
+
     const [taskList, setTaskList] = useState<Task[]>(initialTasks);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,13 +99,14 @@ function TasksPage() {
 
         setIsCreating(true);
         try {
-            const newTask = await createTask({ 
-                data: { title, description: description || undefined } 
+            const newlyCreatedTask = await createTask({
+                data: { title, description: description || undefined }
             });
-            setTaskList((prev) => [newTask, ...prev]);
+            setTaskList((prev) => [newlyCreatedTask, ...prev]);
             setTitle('');
             setDescription('');
         } catch (err) {
+            setError("Failed to create a task. Please try again.");
             console.error("Server Error:", err);
         } finally {
             setIsCreating(false);
@@ -127,6 +129,13 @@ function TasksPage() {
 
             <section className="bg-white rounded-xl shadow-sm border p-6 mb-8">
                 <form onSubmit={handleCreate} className="space-y-4">
+
+                    {error && (
+                        <div className="text-red mb-10">
+                            {error}
+                        </div>
+                    )}
+
                     <input
                         type="text"
                         value={title}
@@ -141,9 +150,9 @@ function TasksPage() {
                         placeholder="Description (optional)"
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
-                    <button 
-                        type="submit" 
-                        disabled={isCreating} 
+                    <button
+                        type="submit"
+                        disabled={isCreating}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
                     >
                         {isCreating ? 'Adding...' : 'Add Task'}
@@ -168,8 +177,8 @@ function TasksPage() {
                                 <option value="in_progress">In Progress</option>
                                 <option value="done">Done</option>
                             </select>
-                            <button 
-                                onClick={() => handleDelete(task.id)} 
+                            <button
+                                onClick={() => handleDelete(task.id)}
                                 className="text-red-500 hover:text-red-700 font-medium"
                             >
                                 Delete
