@@ -10,7 +10,7 @@ function Dashboard() {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome, {session?.user.name}!</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome {session?.user.name} :)</h1>
             <p className="text-xl text-gray-600 mb-8">
                 Your task management dashboard
             </p>
